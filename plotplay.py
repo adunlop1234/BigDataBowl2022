@@ -1,7 +1,10 @@
 import matplotlib.pyplot as plt
+from matplotlib import animation
 import pandas as pd
 import numpy as np
 import sys, os
+
+ANIMATE = True
 
 def main():
 
@@ -38,15 +41,6 @@ def main():
 
     frames = plays["frameId"].unique()
 
-    # Animate play that has been selected #
-
-    ## Create background ##
-
-    # Add line of scrimage and first down marker
-    line_of_scrimage = plays.loc[(plays.displayName == "football") & (plays.frameId == 1), "x"].values
-    if line_of_scrimage < 110:
-        first_down_marker = line_of_scrimage + 10
-
     # Create title with relevant information #
 
     # Get home and away team
@@ -59,16 +53,23 @@ def main():
     offence_team = plays_df.possessionTeam[(plays_df.gameId == gameId) & (plays_df.playId == playId)].values[0]
     defence_team = home if offence_team == away else away
 
-    # Set title
-    title = offence_team + " vs. " + defence_team + " "
+    # Add line of scrimage and first down marker
+    line_of_scrimage = plays.loc[(plays.displayName == "football") & (plays.frameId == 1), "x"].values
+    if line_of_scrimage < 110:
+        first_down_marker = line_of_scrimage + 10
 
     # Strip the players
     players = plays.loc[plays["frameId"] == 1, "displayName"]
 
-    fig = plt.figure(figsize=(6, 4), dpi=200, facecolor='w', edgecolor='k')
+    # Set title
+    title = offence_team + " vs. " + defence_team + " "
 
-    # Loop over each frame
-    for frame in frames:
+    fig = plt.figure(figsize=(6, 4), dpi=200, facecolor='w', edgecolor='k')
+    
+    def animate(frame):
+
+        # Increase counter to match the frame numbering
+        frame += 1
 
         # Redraw the background each frame
         plt.clf()
@@ -118,9 +119,19 @@ def main():
 
             plt.plot(x, y, color=colour, marker='o', markersize=2)
 
-        plt.pause(0.001)
+        plt.draw()
+    
+    if ANIMATE:
+        anim = animation.FuncAnimation(fig, animate, frames=frames[-1]-1)
 
-    plt.show()
+        # Set up formatting for the movie files
+        Writer = animation.writers['ffmpeg']
+        writer = Writer(fps=10.0, metadata=dict(artist='Me'), bitrate=1800)
+        anim.save("play.mp4", writer=writer)
+    else:
+        for frame in frames:
+            animate(frame)
+            plt.pause(0.001)
 
 if __name__ == "__main__":
     main()
