@@ -9,12 +9,12 @@ ANIMATE = True
 def main():
 
     # Load the play dataframe
-    #df = pd.read_csv(os.path.join('data', 'tracking2020.csv'))
-    df = pd.read_csv('test_play.csv')
+    df = pd.read_csv(os.path.join('data', 'tracking2018.csv'))
+    #df = pd.read_csv('test_play.csv')
 
     # Set specific play if requested
-    playId = df.playId.unique()[0]
-    gameId = df.gameId.unique()[0]
+    playId = 3868
+    gameId = 2018090600
     '''
     if len(sys.argv) == 2:
         playId, gameId = map(int, sys.argv[1].split('-'))
@@ -31,8 +31,8 @@ def main():
 
     # Get all plays from the game and sort based on frameId
     plays = df[(df.playId == playId) & (df.gameId == gameId)].sort_values("frameId", ascending=True)
-    #plays.to_csv('test_play.csv')
-    #sys.exit()
+    if not len(plays):
+        raise ValueError('gameId and playId are not in this year data.')
 
     # Normalise the play direction
     if (plays.playDirection == "left").any(): 
