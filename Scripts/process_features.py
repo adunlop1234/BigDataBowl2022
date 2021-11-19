@@ -13,9 +13,9 @@ Function to process the data for each play into cleaned formatted data.
 def main():
 
     # Get the processed data for each year
-    tracking2018 = process(os.path.join("data", "tracking2018.csv"), "eligible_kickoff_plays.csv")
-    tracking2019 = process(os.path.join("data", "tracking2019.csv"), "eligible_kickoff_plays.csv")
-    tracking2020 = process(os.path.join("data", "tracking2020.csv"), "eligible_kickoff_plays.csv")
+    tracking2018 = process(os.path.join("data", "tracking2018.csv"), os.path.join("processedData", "eligible_kickoff_plays.csv"))
+    tracking2019 = process(os.path.join("data", "tracking2019.csv"), os.path.join("processedData", "eligible_kickoff_plays.csv"))
+    tracking2020 = process(os.path.join("data", "tracking2020.csv"), os.path.join("processedData", "eligible_kickoff_plays.csv"))
 
     # Combine data
     kickoffs = tracking2018.copy()
