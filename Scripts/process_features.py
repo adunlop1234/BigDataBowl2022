@@ -22,6 +22,12 @@ def main():
     kickoffs = kickoffs.append(tracking2019, ignore_index=True)
     kickoffs = kickoffs.append(tracking2020, ignore_index=True)
 
+    # Release the memory for the big tracking files
+    del tracking2018, tracking2019, tracking2020
+
+    # Add a column which indicates what frame the ball landed
+    kickoffs = add_ball_landed_column(kickoffs)
+
     # Write the output
     kickoffs.to_csv(os.path.join("..", 'processedData', 'ProcessedKickoffs.csv'), index=False)
 
@@ -38,6 +44,12 @@ def normalise_coords(df):
     # Normalise x and y
     df.x = df.x / 120
     df.y = df.y / (160/3) - 0.5
+
+    # Cap the x and y values at 0 -> 1 and -0.5 -> 0.5
+    df.x[df.x > 1.0] = 1.0
+    df.x[df.x < 0.0] = 0.0
+    df.y[df.y > 0.5] = 0.5
+    df.y[df.y < -0.5] = -0.5
 
     # Return dataframe 
     return df
@@ -69,6 +81,37 @@ def get_plays_information():
     combined_df = combined_df[["uniqueId", "kickingTeam"]]
 
     return combined_df
+
+def add_ball_landed_column(df):
+    
+    # Filter based on plays that have good events
+    play_events_to_keep = ["kickoff_land", "kick_received", "touchback"]
+    good_plays = df.loc[((df.displayName == 'football') & (df.event.isin(play_events_to_keep))), ['uniqueId']]
+    good_kickoffs = df[df.uniqueId.isin(good_plays.uniqueId.values)]
+
+    # Find where the ball landed for each play
+    football = good_kickoffs[good_kickoffs.displayName == "football"]
+
+    football_recieved = football.loc[football.event == "kick_received", ["frameId", "uniqueId"]]
+    touchback = football.loc[football.event == "touchback", ["frameId", "uniqueId"]]
+    football_landed = football.loc[football.event == "kickoff_land", ["frameId", "uniqueId"]]
+
+    football_recieved = football_recieved.rename(columns={'frameId' : 'recievedFrameId'})
+    touchback = touchback.rename(columns={'frameId' : 'touchbackFrameId'})
+    football_landed = football_landed.rename(columns={'frameId' : 'landedFrameId'})
+
+    # Combine to a single array that finds the x location of the ball landing
+    football_all = pd.merge(football, football_recieved, on='uniqueId', how='left')
+    football_all = pd.merge(football_all, touchback, on='uniqueId', how='left')
+    football_all = pd.merge(football_all, football_landed, on='uniqueId', how='left')   
+
+    # Define the ball landed frameId
+    football_all["ballLandFrameId"] = football_all[["recievedFrameId", "touchbackFrameId", "landedFrameId"]].min(axis=1)
+    football_all = football_all.loc[football_all.frameId==football_all.ballLandFrameId, :]
+
+    # Merge the column for ball landed into the main dataframe
+    df = pd.merge(df, football_all.loc[:, ["ballLandFrameId", "uniqueId"]], on='uniqueId')
+    return df
 
 def process(tracking_filepath, eligible_plays_filepath):
 

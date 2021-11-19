@@ -32,7 +32,7 @@ def landFramePlays(df_kickoffs, n_bins_x, n_bins_y):
     data = dict()
 
     for id_i in listUniqueIds:
-        data[id_i] = binXY(df_kickoffs.loc[df_kickoffs["uniqueId"] == id_i, :], n_bins_x, n_bins_y)
+        data[id_i] = binXY(df_kickoffs.loc[(df_kickoffs["uniqueId"] == id_i), :], n_bins_x, n_bins_y)
 
     return data
 
@@ -41,7 +41,7 @@ def binXY(kickoffs_1Play_1Frame, n_bins_x, n_bins_y):
     """
     Bins the x-y data into discrete bins for one frame of one play
     """
-    
+
     if (n_bins_y % 2) == 1:
         raise ValueError('y must be even')
 
@@ -59,17 +59,27 @@ def binXY(kickoffs_1Play_1Frame, n_bins_x, n_bins_y):
 
     df_kicking_np = df_kicking[["x_bin", "y_bin"]].to_numpy()
     for i in np.ndindex(df_kicking_np.shape[0]):
-        kicking[df_kicking_np[i]] += 1
+        kicking[df_kicking_np[i][0], df_kicking_np[i][1]] += 1   
 
     df_recieving_np = df_recieving[["x_bin", "y_bin"]].to_numpy()
     for i in np.ndindex(df_recieving_np.shape[0]):
-        recieving[df_recieving_np[i]] += 1
+        recieving[df_recieving_np[i][0], df_recieving_np[i][1]] += 1
 
     specialTeamsResult = (int)(kickoffs_1Play_1Frame["specialTeamsResult"].iloc[0]  == "Return")
 
     return (kicking, recieving, specialTeamsResult)
 
-    
+def maxMinXY(df):
+
+    df = df.loc[(df.displayName != 'football') & (df.frameId == df.ballLandFrameId), :]
+    df.y.hist(bins=100)
+    import matplotlib.pyplot as plt
+    plt.show()
+
+    print("Maximum x value is : " + str(df.x.max()))
+    print("Minimum x value is : " + str(df.x.min()))
+    print("Maximum y value is : " + str(df.y.max()))
+    print("Minimum y value is : " + str(df.y.min()))
 
 
     
