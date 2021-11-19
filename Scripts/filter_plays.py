@@ -32,9 +32,6 @@ def main():
     football_all = pd.merge(football_all, touchback, on='uniqueId', how='left')
     football_all = pd.merge(football_all, football_landed, on='uniqueId', how='left')   
 
-    football_all["ballLandFrameId"] = football_all[["recievedFrameId", "touchbackFrameId", "landedFrameId"]].min(axis=1)
-    x_landed = football_all.loc[football_all.ballLandFrameId == football_all.frameId, ["x"]]
-
     # Define if the it the uniqueId lands in the endzone or not
     football_all["ballLandFrameId"] = football_all[["recievedFrameId", "touchbackFrameId", "landedFrameId"]].min(axis=1)
     endzone_lands = football_all.loc[football_all.ballLandFrameId == football_all.frameId, ["x", "uniqueId"]]

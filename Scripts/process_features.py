@@ -23,7 +23,7 @@ def main():
     kickoffs = kickoffs.append(tracking2020, ignore_index=True)
     
     # Write the output
-    kickoffs.to_csv(os.path.join('data', 'ProcessedKickoffs.csv'), index=False)
+    kickoffs.to_csv(os.path.join('processedData', 'ProcessedKickoffs.csv'), index=False)
 
 def normalise_coords(df):
     '''
