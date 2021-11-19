@@ -13,17 +13,17 @@ Function to process the data for each play into cleaned formatted data.
 def main():
 
     # Get the processed data for each year
-    tracking2018 = process(os.path.join("data", "tracking2018.csv"), os.path.join("processedData", "eligible_kickoff_plays.csv"))
-    tracking2019 = process(os.path.join("data", "tracking2019.csv"), os.path.join("processedData", "eligible_kickoff_plays.csv"))
-    tracking2020 = process(os.path.join("data", "tracking2020.csv"), os.path.join("processedData", "eligible_kickoff_plays.csv"))
+    tracking2018 = process(os.path.join("..", "data", "tracking2018.csv"), os.path.join("..", "processedData", "eligible_kickoff_plays.csv"))
+    tracking2019 = process(os.path.join("..", "data", "tracking2019.csv"), os.path.join("..", "processedData", "eligible_kickoff_plays.csv"))
+    tracking2020 = process(os.path.join("..", "data", "tracking2020.csv"), os.path.join("..", "processedData", "eligible_kickoff_plays.csv"))
 
     # Combine data
     kickoffs = tracking2018.copy()
     kickoffs = kickoffs.append(tracking2019, ignore_index=True)
     kickoffs = kickoffs.append(tracking2020, ignore_index=True)
-    
+
     # Write the output
-    kickoffs.to_csv(os.path.join('processedData', 'ProcessedKickoffs.csv'), index=False)
+    kickoffs.to_csv(os.path.join("..", 'processedData', 'ProcessedKickoffs.csv'), index=False)
 
 def normalise_coords(df):
     '''
@@ -42,6 +42,34 @@ def normalise_coords(df):
     # Return dataframe 
     return df
 
+def get_plays_information():
+
+    # Import plays.csv 
+    plays_df = pd.read_csv(os.path.join("..", "data", "plays.csv"))
+
+    # Read in games.csv
+    games_df = pd.read_csv(os.path.join("..", "data", "games.csv"))
+    games_df = games_df.astype({"gameId" : str})
+
+    # Create uniqueId on plays
+    plays_df = plays_df.astype({"gameId" : str, "playId" : str})
+    plays_df["uniqueId"] = plays_df.gameId + "-" + plays_df.playId
+
+    # Join with the plays.csv on the uniqueId
+    combined_df = pd.merge(plays_df, games_df, on=["gameId"])
+
+    # Only keep relevant columns
+    combined_df = combined_df[["uniqueId", "possessionTeam", "homeTeamAbbr", "visitorTeamAbbr"]]
+
+    # Specify whether the home or away team is kicking or not
+    combined_df["kickingTeam"] = combined_df.possessionTeam==combined_df.homeTeamAbbr
+    combined_df.kickingTeam.replace({True: "home", False:"away"}, inplace=True)
+
+    # Return the uniqueId, the kicking team and the returnerId to be merged later
+    combined_df = combined_df[["uniqueId", "kickingTeam"]]
+
+    return combined_df
+
 def process(tracking_filepath, eligible_plays_filepath):
 
     # Process the play specified
@@ -52,7 +80,7 @@ def process(tracking_filepath, eligible_plays_filepath):
     print("Loaded tracking data. Number of rows: " + str(len(tracking)))
 
     # Only keep desired columns
-    tracking_columns_to_keep = ['x', 'y', 'event', 'displayName', 'position', 'frameId', 'playDirection', 'uniqueId']
+    tracking_columns_to_keep = ['x', 'y', 'event', 'displayName', 'position', 'frameId', 'playDirection', 'uniqueId', "team"]
     tracking = tracking[tracking_columns_to_keep]
 
     # Only keep the plays from the specified type list (kickoff, punts etc.)
@@ -77,12 +105,21 @@ def process(tracking_filepath, eligible_plays_filepath):
     print("Dropped all frames that occur before the kickoff. Number of rows: " + str(len(tracking)))
 
     # Open the plays information to find the result of the plays
-    plays = pd.read_csv(os.path.join("data", "plays.csv"))
+    plays = pd.read_csv(os.path.join("..", "data", "plays.csv"))
     plays = plays.astype({"playId" : str, "gameId" : str})
     plays["uniqueId"] = plays.gameId + "-" + plays.playId
 
+    # Get the home/away information  
+    homeAwayPossession_df = get_plays_information()
+
+    # Combine the tracking data with the home/away team data to specify the kicking/returning team
+    tracking = pd.merge(tracking, homeAwayPossession_df, on="uniqueId")
+    tracking['kickingRecieving'] = tracking.team==tracking.kickingTeam
+    tracking.kickingRecieving = tracking.kickingRecieving.replace({True : 'kicking', False : 'recieving'})
+    tracking = tracking.drop(columns=["team", "kickingTeam"])
+
     # Add the relevant information from the plays and combine the dataframes
-    play_columns_to_keep = ["uniqueId", "specialTeamsResult"]
+    play_columns_to_keep = ["uniqueId", "specialTeamsResult", "returnerId"]
     combined_data = pd.merge(tracking, plays[play_columns_to_keep], on='uniqueId')
     
     print("Merged play data. Number of rows: " + str(len(tracking)))
