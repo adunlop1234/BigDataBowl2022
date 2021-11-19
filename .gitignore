@@ -1,4 +1,5 @@
 data/
 processedData/
+*.pyc
 .ipynb_checkpoints/
 play.mp4
