@@ -13,9 +13,9 @@ Function to process the data for each play into cleaned formatted data.
 def main():
 
     # Get the processed data for each year
-    tracking2018 = process(os.path.join("data", "tracking2018.csv"), "eligible_kickoff_plays.csv")
-    tracking2019 = process(os.path.join("data", "tracking2019.csv"), "eligible_kickoff_plays.csv")
-    tracking2020 = process(os.path.join("data", "tracking2020.csv"), "eligible_kickoff_plays.csv")
+    tracking2018 = process(os.path.join("..", "data", "tracking2018.csv"), os.path.join("..", "processedData", "eligible_kickoff_plays.csv"))
+    tracking2019 = process(os.path.join("..", "data", "tracking2019.csv"), os.path.join("..", "processedData", "eligible_kickoff_plays.csv"))
+    tracking2020 = process(os.path.join("..", "data", "tracking2020.csv"), os.path.join("..", "processedData", "eligible_kickoff_plays.csv"))
 
     # Combine data
     kickoffs = tracking2018.copy()
@@ -23,7 +23,7 @@ def main():
     kickoffs = kickoffs.append(tracking2020, ignore_index=True)
 
     # Write the output
-    kickoffs.to_csv(os.path.join('processedData', 'ProcessedKickoffs.csv'), index=False)
+    kickoffs.to_csv(os.path.join("..", 'processedData', 'ProcessedKickoffs.csv'), index=False)
 
 def normalise_coords(df):
     '''
@@ -45,10 +45,10 @@ def normalise_coords(df):
 def get_plays_information():
 
     # Import plays.csv 
-    plays_df = pd.read_csv(os.path.join("data", "plays.csv"))
+    plays_df = pd.read_csv(os.path.join("..", "data", "plays.csv"))
 
     # Read in games.csv
-    games_df = pd.read_csv(os.path.join("data", "games.csv"))
+    games_df = pd.read_csv(os.path.join("..", "data", "games.csv"))
     games_df = games_df.astype({"gameId" : str})
 
     # Create uniqueId on plays
@@ -105,7 +105,7 @@ def process(tracking_filepath, eligible_plays_filepath):
     print("Dropped all frames that occur before the kickoff. Number of rows: " + str(len(tracking)))
 
     # Open the plays information to find the result of the plays
-    plays = pd.read_csv(os.path.join("data", "plays.csv"))
+    plays = pd.read_csv(os.path.join("..", "data", "plays.csv"))
     plays = plays.astype({"playId" : str, "gameId" : str})
     plays["uniqueId"] = plays.gameId + "-" + plays.playId
 
