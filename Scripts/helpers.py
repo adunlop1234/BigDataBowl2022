@@ -22,37 +22,55 @@ def kickoffLocationColumn(df_kickoffs):
     
     return kickoffs_new
 
+
+def landFramePlays(df_kickoffs, n_bins_x, n_bins_y):
+    """
+    Returns a dictionary of {"uniqueId" : [kicking, recieving, label]}
+    """
+
+    listUniqueIds = df_kickoffs["uniqueId"].unique()
+    data = dict()
+
+    for id_i in listUniqueIds:
+        data[id_i] = binXY(df_kickoffs.loc[df_kickoffs["uniqueId"] == id_i, :], n_bins_x, n_bins_y)
+
+    return data
+
+
 def binXY(kickoffs_1Play_1Frame, n_bins_x, n_bins_y):
     """
-    Bins the x-y data into discrete bins
+    Bins the x-y data into discrete bins for one frame of one play
     """
     
     if (n_bins_y % 2) == 1:
         raise ValueError('y must be even')
 
-    kickoffs_1Play_1Frame["x_bin"] = (kickoffs_1Play_1Frame["x"] * n_bins_x).astype("int32")
-    kickoffs_1Play_1Frame["y_bin"] = ((kickoffs_1Play_1Frame["y"] + 0.5) * n_bins_y).astype("int32")
+    df_kicking = kickoffs_1Play_1Frame.loc[kickoffs_1Play_1Frame["kickingRecieving"] == "kicking", ["x", "y"]]
+    df_recieving = kickoffs_1Play_1Frame.loc[kickoffs_1Play_1Frame["kickingRecieving"] == "recieving", ["x", "y"]]
 
-    print(kickoffs_1Play_1Frame.head(25))
+    tol = 0.00000001
+    df_kicking["x_bin"] = ((df_kicking["x"] - tol) * n_bins_x).astype("int")
+    df_kicking["y_bin"] = ((df_kicking["y"] - tol + 0.5) * n_bins_y).astype("int")
+    df_recieving["x_bin"] = ((df_recieving["x"] - tol) * n_bins_x).astype("int")
+    df_recieving["y_bin"] = ((df_recieving["y"] - tol + 0.5) * n_bins_y).astype("int")
 
-    offence = np.zeros((n_bins_x, n_bins_y), dtype=int)
-    defence = np.zeros((n_bins_x, n_bins_y), dtype=int)
+    kicking = np.zeros((n_bins_x, n_bins_y), dtype=int)
+    recieving = np.zeros((n_bins_x, n_bins_y), dtype=int)
+
+    df_kicking_np = df_kicking[["x_bin", "y_bin"]].to_numpy()
+    for i in np.ndindex(df_kicking_np.shape[0]):
+        kicking[df_kicking_np[i]] += 1
+
+    df_recieving_np = df_recieving[["x_bin", "y_bin"]].to_numpy()
+    for i in np.ndindex(df_recieving_np.shape[0]):
+        recieving[df_recieving_np[i]] += 1
+
+    specialTeamsResult = (int)(kickoffs_1Play_1Frame["specialTeamsResult"].iloc[0]  == "Return")
+
+    return (kicking, recieving, specialTeamsResult)
 
     
 
-
-
-
-
-
-def OLDperpareFeaturesLandFrame(kickoffs, bin_x, bin_y):
-    """
-    Returns a df with the features and labels, for 'land' frame only
-    """
-    
-    # Create label
-    kickoffs["Labels"] = 0
-    kickoffs.loc[kickoffs["specialTeamsResult"] == "Return","Labels"] = 1
 
     
 

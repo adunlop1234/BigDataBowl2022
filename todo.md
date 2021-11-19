@@ -1,5 +1,12 @@
 ## To Do
 
+
+# Ben
+Preprocessing
+
+# Arthur
+Set-up the model
+
 * Work towards a processed feature set at a point in time.
 
 
