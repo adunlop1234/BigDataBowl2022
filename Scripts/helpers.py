@@ -69,6 +69,17 @@ def binXY(kickoffs_1Play_1Frame, n_bins_x, n_bins_y):
 
     return (kicking, recieving, specialTeamsResult)
 
+
+def dataAugment(X, y):
+    """
+    Flip data in y-direction to double data
+    """
+    X_aug = np.concatenate((np.flip(X, 1), X), axis=0)
+    y_aug = np.concatenate(y, y, axis=0)
+    
+    return (X_aug, y_aug)
+
+
 def maxMinXY(df):
 
     df = df.loc[(df.displayName != 'football') & (df.frameId == df.ballLandFrameId), :]

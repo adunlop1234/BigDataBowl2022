@@ -18,13 +18,9 @@ batch_size = 32
 test_size = 0.3
 
 # Read in the data
-features_filename = "features.pickle"
+features_filename = "featuresRegression.pickle"
 with open(os.path.join('..', 'processedData', features_filename), "rb") as f:
     data = pickle.load(f)
-
-#! Work on this next
-# Unpack data setting the X to be the maps and the y to be the label
-# The packages seem to work fine in the end although they have the weird orange squiggle below them
 
 y, X = [], []
 for uniqueId in data.keys():
@@ -52,13 +48,13 @@ model = keras.models.Sequential([
     keras.layers.Dropout(0.5),
     keras.layers.Dense(64, activation="relu"),
     keras.layers.Dropout(0.5),
-    keras.layers.Dense(1, activation="sigmoid")
+    keras.layers.Dense(1, activation="relu")
 ])
 
 # Compile neural network
 model.compile(
     optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
-    loss="binary_crossentropy",
+    loss="MeanSquaredError",
     metrics=["accuracy"]
 )
 
