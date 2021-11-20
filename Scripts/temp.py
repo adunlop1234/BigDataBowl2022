@@ -10,7 +10,7 @@ import time
 
 kickoffs = pd.read_csv(os.path.join('..', 'processedData', 'ProcessedKickoffs.csv'))
 start = time.time()
-output = helpers.landFramePlays(kickoffs.loc[(kickoffs.frameId==kickoffs.ballLandFrameId) & (kickoffs.displayName!='football'), :], 128, 64)
+output = helpers.landFramePlays(kickoffs.loc[(kickoffs.frameId==kickoffs.ballLandFrameId) & (kickoffs.displayName!='football'), :], 64, 32)
 end = time.time()
 print(end - start)
 
