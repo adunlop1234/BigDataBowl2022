@@ -1,5 +1,8 @@
 from tensorflow import keras
 from sklearn.model_selection import train_test_split
+import pickle
+import sys, os
+import numpy as np
 
 # Get the size of the pixels
 X_PIXELS = 128
@@ -15,7 +18,22 @@ batch_size = 16
 test_size = 0.3
 
 # Read in the data
-filepath = ""
+features_filename = "features.pickle"
+with open(os.path.join('..', 'processedData', features_filename), "rb") as f:
+    data = pickle.load(f)
+
+#! Work on this next
+# Unpack data setting the X to be the maps and the y to be the label
+# The packages seem to work fine in the end although they have the weird orange squiggle below them
+
+y, X = [], []
+for uniqueId in data.keys():
+    y.append(data[uniqueId][2])
+    X.append(np.stack([data[uniqueId][0], data[uniqueId][1]], axis=2))
+
+y = np.array(y).reshape((-1,1))
+X = np.array(X)
+
 
 # Split the data
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
@@ -45,7 +63,7 @@ model.compile(
 )
 
 # Fit model on training data
-history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size)
+history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=2)
 
 # Evaluate neural network performance
 model.evaluate(X_test,  y_test, verbose=2)
