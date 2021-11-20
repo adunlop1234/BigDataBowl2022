@@ -15,7 +15,8 @@ l2_regularisation = 0.055
 learning_rate = 0.0005
 epochs = 10
 batch_size = 32
-test_size = 0.3
+test_size = 0.1
+valid_size = 0.2
 
 # Read in the data
 features_filename = "featuresRegression.pickle"
@@ -32,7 +33,8 @@ X = np.array(X)
 
 
 # Split the data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y)
+X_trainValid, X_test, y_trainValid, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y)
+X_train, X_valid, y_train, y_valid = train_test_split(X_trainValid, y_trainValid, test_size=valid_size, random_state=random_state, stratify=y_trainValid)
 
 # Set up the tensorflow model
 model = keras.models.Sequential([
