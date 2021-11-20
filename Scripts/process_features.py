@@ -23,10 +23,13 @@ def main():
     kickoffs = kickoffs.append(tracking2020, ignore_index=True)
 
     # Release the memory for the big tracking files
-    del tracking2018, tracking2019, tracking2020
+    #del tracking2018, tracking2019, tracking2020
 
     # Add a column which indicates what frame the ball landed
     kickoffs = add_ball_landed_column(kickoffs)
+
+    # Add a column that is the final location of the return
+    kickoffs = add_return_final_ball_location(kickoffs)
 
     # Write the output
     kickoffs.to_csv(os.path.join("..", 'processedData', 'ProcessedKickoffs.csv'), index=False)
@@ -81,6 +84,21 @@ def get_plays_information():
     combined_df = combined_df[["uniqueId", "kickingTeam"]]
 
     return combined_df
+
+def add_return_final_ball_location(df):
+
+    # Get the location the ball landed in x
+    ball_land_location = df.loc[(df.displayName=="football") & (df.ballLandFrameId==df.frameId), ["x", "uniqueId"]]
+    ball_land_location.rename({"x" : "ballLandLocation"})
+
+    # Merge the ball land location with the main dataframe
+    df = pd.merge(df, ball_land_location, ball_land_location, on="uniqueId")
+
+    # Create new column called the final yardage line the ball is returned to
+    df["returnBallFinalLocation"] = df.ballLandLocation + df.kickReturnYardage / 120
+    df = df.drop(columns=["ballLandLocation"])
+
+    return df
 
 def add_ball_landed_column(df):
     
@@ -162,7 +180,7 @@ def process(tracking_filepath, eligible_plays_filepath):
     tracking = tracking.drop(columns=["team", "kickingTeam"])
 
     # Add the relevant information from the plays and combine the dataframes
-    play_columns_to_keep = ["uniqueId", "specialTeamsResult", "returnerId"]
+    play_columns_to_keep = ["uniqueId", "specialTeamsResult", "returnerId", "kickReturnYardage"]
     combined_data = pd.merge(tracking, plays[play_columns_to_keep], on='uniqueId')
     
     print("Merged play data. Number of rows: " + str(len(tracking)))

@@ -5,10 +5,18 @@
 Preprocessing
 
 # Arthur
-Set-up the model
+Get the return yardage featuyres into processed kickoffs
+Get the label to be return yardage + yardage location of the recieiving point
+Restrict the dataset used by the E(yards) model to only feature ones which were returned
+
+Create a function to augment the training data by flipping in the y direction
+Create another model that has an output of expected yard line finish
 
 * Work towards a processed feature set at a point in time.
 
+# Model Improvements
+* Tune hyperparameters
+* Cross validation
 
 # Previous Ideas
 
