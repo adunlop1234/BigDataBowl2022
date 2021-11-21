@@ -31,6 +31,9 @@ def main():
     # Add a column that is the final location of the return
     kickoffs = add_return_final_ball_location(kickoffs)
 
+    # Get the final frame of the play occurring when player tackled, out-of-bounds etc.
+    kickoffs = insert_final_frame_Id(kickoffs)
+
     # Write the output
     kickoffs.to_csv(os.path.join("..", 'processedData', 'ProcessedKickoffs.csv'), index=False)
 

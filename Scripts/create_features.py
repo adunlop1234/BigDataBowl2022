@@ -6,13 +6,11 @@ import matplotlib.pyplot as plt
 
 
 # Frames to keep
-start = 1
-step = 5
-count = 5
-framesKeep = [start + i*step for i in range(count)]
-
+framesBefore = 20
+stepSize = 5
+framesAfter = 100
 kickoffs = pd.read_csv(os.path.join('..', 'processedData', 'ProcessedKickoffs.csv'))
-helpers.structuredData(framesKeep, kickoffs, 64, 32)
+helpers.structuredData(kickoffs, 64, 32, stepSize, framesBefore, framesAfter)
 
 
 sys.exit()

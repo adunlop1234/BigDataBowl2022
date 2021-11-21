@@ -57,27 +57,29 @@ def OLDframePlays(frame_players, frame_football, n_bins_x, n_bins_y):
     return data
 
 
-def structuredData(framesKeep, kickoffs, n_bins_x, n_bins_y, stepSize, framesBefore, framesAfter):
+def structuredData(kickoffs, n_bins_x, n_bins_y, stepSize, framesBefore, framesAfter):
     """
     Generate the data in structure: { uniqueId : { frameId : (64x32x3 , label) } }
     """
 
     listUniqueIds = list(kickoffs.loc[kickoffs.specialTeamsResult=='Return']["uniqueId"].unique())
 
-    data = {id_i : {frame_i : 0 for frame_i in framesKeep} for id_i in listUniqueIds}
+    data = {id_i : 0 for id_i in listUniqueIds}
 
     for id_i in listUniqueIds:
-        catchFrameId = kickoffs.loc[(kickoffs.uniqueId == id_i)].ballLandFrameId[0]
-        kickoffFrameId = kickoffs.loc[(kickoffs.uniqueId == id_i)].kickoffFrameId[0]
-        finalFrameId = kickoffs.loc[(kickoffs.uniqueId == id_i)].finalFrameId[0]
+        catchFrameId = kickoffs.loc[(kickoffs.uniqueId == id_i)].ballLandFrameId.iloc[0]
+        kickoffFrameId = kickoffs.loc[(kickoffs.uniqueId == id_i)].kickoffFrameId.iloc[0]
+        finalFrameId = kickoffs.loc[(kickoffs.uniqueId == id_i)].finalFrameId.iloc[0]
         framesKeep = [catchFrameId - delta*stepSize for delta in range(1, framesBefore+1)] + [catchFrameId] + [catchFrameId + delta*stepSize for delta in range(1, framesAfter+1)]
         framesKeep = [frame for frame in framesKeep if (frame >= kickoffFrameId and frame <= finalFrameId)]
-                
+        
+        data[id_i] = {frame_i : 0 for frame_i in framesKeep}
+
         for frame_i in framesKeep:
             kickoffs_frame = kickoffs.loc[(kickoffs.uniqueId == id_i) & (kickoffs.frameId==frame_i), :]
             players_1frame1play = kickoffs_frame.loc[kickoffs_frame.displayName!='football', :]
             football_1frame1play = kickoffs_frame.loc[kickoffs_frame.displayName=='football', :]
-            if len(players_1frame1play > 0):
+            if len(players_1frame1play) > 0:
                 data[id_i][frame_i] = binXY(players_1frame1play, football_1frame1play, n_bins_x, n_bins_y)
 
     filename = "structuredData.pickle"
@@ -128,7 +130,7 @@ def binXY(players_1frame1play, football_1frame1play, n_bins_x, n_bins_y):
 
     label = players_1frame1play.returnBallFinalLocation.iloc[0]
 
-    return (np.stack(kicking, recieving, football, axis=2), label)
+    return (np.stack((kicking, recieving, football), axis=2), label)
 
 
 def dataAugment(X, y):
