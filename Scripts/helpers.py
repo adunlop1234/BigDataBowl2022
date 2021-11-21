@@ -24,7 +24,7 @@ def kickoffLocationColumn(df_kickoffs):
     return kickoffs_new
 
 
-def lagFrames(kickoffs, n_bins_x, n_bins_y, frames, jump, step=5):
+def OLDlagFrames(kickoffs, n_bins_x, n_bins_y, frames, jump, step=5):
 
     output = {id_i : [] for id_i in kickoffs.loc[(kickoffs.specialTeamsResult=='Return')]["uniqueId"].unique()}
     
@@ -43,7 +43,7 @@ def lagFrames(kickoffs, n_bins_x, n_bins_y, frames, jump, step=5):
         pickle.dump(output, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def framePlays(frame_players, frame_football, n_bins_x, n_bins_y):
+def OLDframePlays(frame_players, frame_football, n_bins_x, n_bins_y):
     """
     For one frame of input, returns a dictionary of {"uniqueId" : [kicking, recieving, football, label]}
     """
@@ -55,6 +55,39 @@ def framePlays(frame_players, frame_football, n_bins_x, n_bins_y):
         data[id_i] = binXY(frame_players.loc[(frame_players["uniqueId"] == id_i), :], frame_football.loc[(frame_football["uniqueId"] == id_i), :], n_bins_x, n_bins_y)
 
     return data
+
+
+def structuredData(framesKeep, kickoffs, n_bins_x, n_bins_y, stepSize, framesBefore, framesAfter):
+    """
+    Generate the data in structure: { uniqueId : { frameId : (64x32x3 , label) } }
+    """
+
+    listUniqueIds = list(kickoffs.loc[kickoffs.specialTeamsResult=='Return']["uniqueId"].unique())
+
+    data = {id_i : {frame_i : 0 for frame_i in framesKeep} for id_i in listUniqueIds}
+
+    for id_i in listUniqueIds:
+        catchFrameId = kickoffs.loc[(kickoffs.uniqueId == id_i)].ballLandFrameId[0]
+        kickoffFrameId = kickoffs.loc[(kickoffs.uniqueId == id_i)].kickoffFrameId[0]
+        finalFrameId = kickoffs.loc[(kickoffs.uniqueId == id_i)].finalFrameId[0]
+        framesKeep = [catchFrameId - delta*stepSize for delta in range(1, framesBefore+1)] + [catchFrameId] + [catchFrameId + delta*stepSize for delta in range(1, framesAfter+1)]
+        framesKeep = [frame for frame in framesKeep if (frame >= kickoffFrameId and frame <= finalFrameId)]
+                
+        for frame_i in framesKeep:
+            kickoffs_frame = kickoffs.loc[(kickoffs.uniqueId == id_i) & (kickoffs.frameId==frame_i), :]
+            players_1frame1play = kickoffs_frame.loc[kickoffs_frame.displayName!='football', :]
+            football_1frame1play = kickoffs_frame.loc[kickoffs_frame.displayName=='football', :]
+            if len(players_1frame1play > 0):
+                data[id_i][frame_i] = binXY(players_1frame1play, football_1frame1play, n_bins_x, n_bins_y)
+
+    filename = "structuredData.pickle"
+    with open(os.path.join('..', 'processedData', filename), "wb") as f:
+        pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
+    
+    # TODO:
+    # - If frame doesnt exist for one playId will be 0 value, so need to go through and delete
+    # - Keeping all frames, but need to not use garbage data before catch as will make model worse
+    
 
 
 def binXY(players_1frame1play, football_1frame1play, n_bins_x, n_bins_y):
@@ -95,7 +128,7 @@ def binXY(players_1frame1play, football_1frame1play, n_bins_x, n_bins_y):
 
     label = players_1frame1play.returnBallFinalLocation.iloc[0]
 
-    return (kicking, recieving, football, label)
+    return (np.stack(kicking, recieving, football, axis=2), label)
 
 
 def dataAugment(X, y):
