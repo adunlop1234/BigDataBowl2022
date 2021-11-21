@@ -102,6 +102,46 @@ def add_return_final_ball_location(df):
 
     return df
 
+def insert_final_frame_Id(df):
+
+    # Get only plays that have a retun and only the data after the catch
+    returns = df.loc[df.specialTeamsResult=='Return', :]
+    after_catch_data = returns.loc[returns.frameId > returns.ballLandFrameId, :]
+
+    # Get only good plays that have the required events
+    events_to_keep = ['tackle', 'out_of_bounds', 'fumble', 'touchdown']
+    good_plays = after_catch_data.loc[((after_catch_data.displayName == 'football') & (after_catch_data.event.isin(events_to_keep))), ['uniqueId']]
+    final_frameIds = after_catch_data[after_catch_data.uniqueId.isin(good_plays.uniqueId.values)]
+    
+    # Reduce data size by looking only at the football data
+    final_frameIds = final_frameIds.loc[after_catch_data.displayName=='football', ["frameId", "uniqueId", "event"]]
+
+    # Get the frameId that the specific events occur
+    tackleFrameId = final_frameIds.loc[final_frameIds.event == "tackle", ["frameId", "uniqueId"]]
+    outOfBoundsFrameId = final_frameIds.loc[final_frameIds.event == "out_of_bounds", ["frameId", "uniqueId"]]
+    fumbleFrameId = final_frameIds.loc[final_frameIds.event == "fumble", ["frameId", "uniqueId"]]
+    touchdownFrameId = final_frameIds.loc[final_frameIds.event == "touchdown", ["frameId", "uniqueId"]]
+
+    # Rename the columns
+    tackleFrameId = tackleFrameId.rename(columns={'frameId' : 'tackleFrameId'})
+    outOfBoundsFrameId = outOfBoundsFrameId.rename(columns={'frameId' : 'outOfBoundsFrameId'})
+    fumbleFrameId = fumbleFrameId.rename(columns={'frameId' : 'fumbleFrameId'})
+    touchdownFrameId = touchdownFrameId.rename(columns={'frameId' : 'touchdownFrameId'})
+
+    # Combine to a single array that has all of the columns
+    finalFrameIdsAll = pd.merge(final_frameIds, tackleFrameId, on='uniqueId', how='left')
+    finalFrameIdsAll = pd.merge(finalFrameIdsAll, outOfBoundsFrameId, on='uniqueId', how='left')
+    finalFrameIdsAll = pd.merge(finalFrameIdsAll, fumbleFrameId, on='uniqueId', how='left') 
+    finalFrameIdsAll = pd.merge(finalFrameIdsAll, touchdownFrameId, on='uniqueId', how='left') 
+
+    # Find the first occurring frame
+    finalFrameIdsAll["finalFrameId"] = finalFrameIdsAll[["tackleFrameId", "outOfBoundsFrameId", "fumbleFrameId", "touchdownFrameId"]].min(axis=1)
+    lastFrame = finalFrameIdsAll.loc[finalFrameIdsAll.finalFrameId == finalFrameIdsAll.frameId, ["finalFrameId", "uniqueId"]]
+
+    # Merge this data with the main dataframe
+    df = pd.merge(df, lastFrame, on='uniqueId', how='left')
+    return df
+
 def add_ball_landed_column(df):
     
     # Filter based on plays that have good events
