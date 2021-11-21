@@ -24,11 +24,12 @@ features_filename = "yardagePredictFeaturesFootball_Lag.pickle"
 with open(os.path.join('..', 'processedData', features_filename), "rb") as f:
     data = pickle.load(f)
 
+# TODO figure out why ~3% of frames don't have all 5? Counter({5: 2659, 3: 35, 4: 24, 2: 18, 1: 5})
 count = []
 for uniqueId in data.keys():
     count.append(len(data[uniqueId]))
 from collections import Counter
-Counter(count)
+print(Counter(count))
 
 y, X = [], []
 for uniqueId in data.keys():

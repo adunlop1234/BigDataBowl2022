@@ -8,17 +8,25 @@ from matplotlib import pyplot as plt
 import process_features
 import time
 
-kickoffs = pd.read_csv(os.path.join('..', 'processedData', 'ProcessedKickoffs.csv'))
-helpers.lagFrames(kickoffs, 64, 32, 5, step=4, yardage=False)
+
 
 
 sys.exit()
+
+W = np.stack(frames, axis=3)
+fig, axs = plt.subplots(5, 3)
+for i in range(3):
+    for j in range(5):
+        axs[j,i].imshow(W[:,:,i,j])
+plt.show()
 
 
 fig, axs = plt.subplots(5, 3)
 for i in range(3):
     for j in range(5):
+        # THis is wrong, doesnt actually go from 1 - 15!
         axs[j,i].imshow(X[0][:,:,(i+1)*(j+1)-1])
+        print((i+1)*(j+1)-1)
 plt.show()
 
 

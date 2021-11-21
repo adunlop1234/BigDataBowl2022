@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 # Read in the processed data
 kickoffs = pd.read_csv(os.path.join('..', 'processedData', 'ProcessedKickoffs.csv'))
-helpers.lagFrames(kickoffs, 64, 32, 5, step=4, yardage=False)
+helpers.lagFrames(kickoffs, 64, 32, 5, 10, step=5)
 
 
 sys.exit()
