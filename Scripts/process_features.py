@@ -23,7 +23,7 @@ def main():
     kickoffs = kickoffs.append(tracking2020, ignore_index=True)
 
     # Release the memory for the big tracking files
-    #del tracking2018, tracking2019, tracking2020
+    del tracking2018, tracking2019, tracking2020
 
     # Add a column which indicates what frame the ball landed
     kickoffs = add_ball_landed_column(kickoffs)
@@ -33,6 +33,8 @@ def main():
 
     # Write the output
     kickoffs.to_csv(os.path.join("..", 'processedData', 'ProcessedKickoffs.csv'), index=False)
+
+    pass
 
 def normalise_coords(df):
     '''
@@ -89,13 +91,13 @@ def add_return_final_ball_location(df):
 
     # Get the location the ball landed in x
     ball_land_location = df.loc[(df.displayName=="football") & (df.ballLandFrameId==df.frameId), ["x", "uniqueId"]]
-    ball_land_location.rename({"x" : "ballLandLocation"})
+    ball_land_location = ball_land_location.rename(columns={"x" : "ballLandLocation"})
 
     # Merge the ball land location with the main dataframe
-    df = pd.merge(df, ball_land_location, ball_land_location, on="uniqueId")
+    df = pd.merge(df, ball_land_location, on="uniqueId")
 
     # Create new column called the final yardage line the ball is returned to
-    df["returnBallFinalLocation"] = df.ballLandLocation + df.kickReturnYardage / 120
+    df["returnBallFinalLocation"] = df.ballLandLocation - df.kickReturnYardage / 120
     df = df.drop(columns=["ballLandLocation"])
 
     return df
