@@ -57,6 +57,7 @@ def OLDframePlays(frame_players, frame_football, n_bins_x, n_bins_y):
     return data
 
 
+# TODO: Figure out why this is taking so long to run. It would take about 10 hours to complete on BC's work laptop. Probably shouldnt be that long.
 def structuredData(kickoffs, n_bins_x, n_bins_y, stepSize, framesBefore, framesAfter):
     """
     Generate the data in structure: { uniqueId : { frameId : (64x32x3 , label) } }
